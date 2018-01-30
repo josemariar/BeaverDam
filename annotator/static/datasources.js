@@ -12,7 +12,6 @@ var DataSources = {
                 }),
                 time: json.frame,
                 continueInterpolation: json.continueInterpolation === false ? false : true,
-                state: json.state,
             };
         },
 
@@ -23,9 +22,8 @@ var DataSources = {
                 y: attr.y,
                 w: attr.width,
                 h: attr.height,
-                continueInterpolation: frame.continueInterpolation,
+                continueInterpolation: frame.continueInterpolation, 
                 frame: frame.time,
-                state: frame.state,
             };
         },
     },
@@ -36,7 +34,7 @@ var DataSources = {
             annotation.keyframes = json.keyframes.map(DataSources.frame.fromJson);
             annotation.type = json.type;
             annotation.fill = json.color || Misc.getRandomColor();
-            annotation.id = json.id;
+            annotation.sceneName = json.sceneName;
             return annotation;
         },
 
@@ -45,7 +43,7 @@ var DataSources = {
                 keyframes: annotation.keyframes.map(DataSources.frame.toJson),
                 type: annotation.type,
                 color: annotation.fill,
-                id: annotation.id,
+                sceneName: annotation.sceneName,
             };
         },
     },
@@ -61,8 +59,7 @@ var DataSources = {
 
         load: function(id) {
             return fetch(`/annotation/${id}`, {
-                method: 'get',
-                credentials: 'same-origin'
+                method: 'get'
             }).then((response) => {
                 if (!response.ok) {
                     return Promise.reject("DataSources.annotations.load failed: fetch");
@@ -99,7 +96,6 @@ var DataSources = {
                     }
                     return Promise.resolve('State saved successfully.');
                 } else {
-                    response.text().then(t => console.log(t));
                     return Promise.resolve(`Error code ${response.status}`);
                 }
             });

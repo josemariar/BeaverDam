@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
-from .models import Video, Label, State
+from .models import Video
+from .models import Label
 from mturk.models import FullVideoTask
 from mturk.queries import get_active_video_turk_task
 from django.db.models import Count, Sum, Q, Case, When, IntegerField
@@ -76,12 +77,7 @@ class VideoAdmin(admin.ModelAdmin):
         return '<a target="_" href="/video/{}/">/video/{}/</a>'.format(obj.id, obj.id)
     video_url.allow_tags = True
     video_url.short_description = 'Video'
-
-
-class StateAdmin(admin.ModelAdmin):
-    list_display = ['name', 'label_name']
-    
+        
     
 admin.site.register(Video, VideoAdmin)
 admin.site.register(Label)
-admin.site.register(State, StateAdmin)

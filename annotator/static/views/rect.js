@@ -79,6 +79,8 @@ class Rect {
 
         this.getPlayerMetrics = null;
 
+		this.visibility = "hidden";
+
         // Prevent adding new properties
         Misc.preventExtensions(this, Rect);
     }
@@ -194,6 +196,18 @@ class Rect {
         });
     }
 
+    get visibility() {
+        return this._visibility;
+    }
+
+    set visibility(visibility) {
+        this._visibility = visibility;
+        this.attr({
+            'visibility': this._visibility,
+        });
+    }
+
+
     attr(attrs) {
         if (this.$el == null) {
             Object.assign(this.preAttachedAttrs, attrs);
@@ -299,6 +313,7 @@ class Rect {
             this.$el.toBack();
         }
     }
+
 
 
     // Event handlers

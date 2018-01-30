@@ -1,5 +1,6 @@
 "use strict";
 
+var lastAnnotation;
 
 class Player {
     constructor({$container, videoSrc, videoId, videoStart, videoEnd, isImageSequence, turkMetadata}) {
@@ -129,7 +130,9 @@ class Player {
         $(annotation).on('delete', () => {
             $(annotation).off();
             $(rect).off();
-            this.view.deleteRect(rect);
+            if (rect != null) {
+                this.view.deleteRect(rect);
+            }
         });
     }
 
@@ -140,11 +143,31 @@ class Player {
         });
 
         $(this).on('change-keyframes', () => {
+            
             this.drawKeyframes();
-            this.drawAnnotationBar();
+            if (this.selectedAnnotation) {
+                $('#annotation-type').val(this.selectedAnnotation.type);
+                $('#scene-name').val(this.selectedAnnotation.sceneName); //Cambiar por attribute 
+
+                var allChecked = document.querySelectorAll('input[name = "object"]');
+                for (var j = 0; j < allChecked.length; j++) {
+                    document.getElementById(allChecked[j].id).checked = false;
+                }
+                var mType = this.selectedAnnotation.type;
+                
+                if (mType != 'Scene') {
+                    for (var i=0; i<mType.length; i++){
+                	    document.getElementById('object-radio-'+mType[i]).checked = true;
+                    }
+                }
+
+            }
         });
 
+        $('#add-btn').click(this.newFrame.bind(this));
+        $('#delete-btn').click(this.endScene.bind(this));
 
+        $('#show-scene').click(this.changeVisibility.bind(this));
         // Submitting
         $('#submit-btn').click(this.submitAnnotations.bind(this));
 
@@ -156,7 +179,7 @@ class Player {
 
         $('#email-btn').click(this.emailWorker.bind(this));
 
-
+       
         // On drawing changed
         this.viewReady().then(() => {
             $(this.view.creationRect).on('drag-start', () => {
@@ -237,39 +260,29 @@ class Player {
                 $(this).triggerHandler('change-keyframes');
             });
 
-
-            // Edit Annotation
-
-            $('#change-label').on('click', (e) => {
-                var annotation = $(e.currentTarget).data('annotation');
-                var newLabel = $('#edit-label option:selected').val();
-                annotation.changeAnnotationLabel(newLabel);
-                $(this).triggerHandler('change-onscreen-annotations');
-                $(this).triggerHandler('change-keyframes');
-                $('#edit-label-modal').modal('toggle');
+            $(this.view).on('change-annotation-type', () => {
+                if (this.selectedAnnotation) {
+                    let annotationType = $('#annotation-type');
+                    this.selectedAnnotation.type = annotationType.val();
+                    annotationType.blur();
+                }
             });
 
-            $('#change-state').on('click', (e) => {
-                var annotation = $(e.currentTarget).data('annotation');
-                var keyframe = $(e.currentTarget).data('keyframe');
-                var newState = $('#edit-state option:selected').val();
-                annotation.changeKeyframeState(keyframe, newState);
-                $(this).triggerHandler('change-onscreen-annotations');
-                $(this).triggerHandler('change-keyframes');
-                $('#edit-state-modal').modal('toggle');
-            });
-            
         });
     }
+
 
     // Draw something
 
     drawOnscreenAnnotations() {
         for (let {annotation, rect} of this.annotationRectBindings) {
+            //console.logconsole.log (annotation.type)
             this.drawAnnotationOnRect(annotation, rect);
+            
         }
     }
 
+    //Dibuja en el cuadro de tiempo
     drawKeyframes() {
         this.view.keyframebar.resetWithDuration(this.view.video.duration);
         for (let annotation of this.annotations) {
@@ -280,14 +293,6 @@ class Player {
         }
     }
 
-    drawAnnotationBar() {
-        this.view.annotationbar.resetWithDuration(this.view.video.duration);
-        for (let annotation of this.annotations) {
-            let selected = (annotation == this.selectedAnnotation);
-            this.view.annotationbar.addAnnotation(annotation, {selected});
-        }
-    }
-
     drawAnnotationOnRect(annotation, rect) {
         if (this.metrics.annotationsStartTime == null) {
             this.metrics.annotationsStartTime = Date.now();
@@ -295,27 +300,111 @@ class Player {
             window.focus();
         }
         var time = this.view.video.currentTime;
-
-        var {bounds, prevIndex, nextIndex, closestIndex, continueInterpolation, state} = annotation.getFrameAtTime(time, this.isImageSequence);
-
+            
+        var {bounds, prevIndex, nextIndex, closestIndex, continueInterpolation} = annotation.getFrameAtTime(time, this.isImageSequence);
+      
         // singlekeyframe determines whether we show or hide the object
         // we want to hide if:
         //   - the very first frame object is in the future (nextIndex == 0 && closestIndex is null)
         //   - we're after the last frame and that last frame was marked as continueInterpolation false
+          
         rect.appear({
             real: closestIndex != null,
             selected: this.selectedAnnotation === annotation,
             singlekeyframe: continueInterpolation && !(nextIndex == 0 && closestIndex === null)
         });
+            
 
         // Don't mess up our drag
         if (rect.isBeingDragged()) return;
 
         rect.bounds = bounds;
+      
     }
 
 
     // Actions
+    newFrame(e) {
+
+        //var annotation = new Annotation([], 1, 1, "casa");
+        lastAnnotation = Annotation.newFromCreationRect2(this.isImageSequence)
+        //var annotation = Annotation.newFromCreationRect(this.isImageSequence);
+        //console.log(this.view.video)
+        lastAnnotation.updateKeyframe({
+            time: this.view.video.currentTime,
+            bounds: Bounds.fromAttrs({
+                x: 1,
+                y: 1,
+                width: 1280,
+                height: 720,
+            })
+        }, this.isImageSequence);
+        this.annotations.push(lastAnnotation);
+        let mRect = this.view.addRect();
+        mRect.fill = lastAnnotation.fill
+        this.initBindAnnotationAndRect(lastAnnotation, mRect);
+        this.drawOnscreenAnnotations();
+        //this.initBindAnnotationAndRect(annotationCopy, rect);
+        //rect.fill = annotation.fill;
+        //this.initBindAnnotationAndRect(annotation, [0,0,50,50]);
+        this.drawKeyframes()
+
+        console.log ('hola')
+    }
+
+    endScene (e) {
+
+        //this.view.video.currentTime, this.isImageSequence
+        lastAnnotation.deleteKeyframeAtTime(this.view.video.currentTime, this.isImageSequence);
+        this.drawOnscreenAnnotations();
+        this.drawKeyframes();
+        //Aqui en lugar de crear una nueva anotacion, deberia coger de alguna forma esa antoacion
+        //y terminar la interpolacion en el frame deseado.
+        //Deberia poderse buscar una anotacion en concreo.
+
+    }
+    changeVisibility (e) {
+        var cont = 0
+
+        if (document.getElementById('show-scene').checked) {
+            for (var i=0; i<this.annotationRectBindings.length; i++) {
+                if (this.annotationRectBindings[i].annotation.type == 'Scene') {
+                    cont =  cont +1
+                    var rect = this.view.addRect();
+                    rect.fill = this.annotationRectBindings[i].annotation.fill
+                    var annotationCopy = Annotation.newAnnotationCustom(this.annotationRectBindings[i].annotation.type, this.annotationRectBindings[i].annotation.keyframes, this.annotationRectBindings[i].annotation.fill, this.annotationRectBindings[i].annotation.id, this.annotationRectBindings[i].annotation.sceneName)
+                    //console.log(annotationCopy.keyframes)
+                    this.annotations.push(annotationCopy);
+                    this.initBindAnnotationAndRect(annotationCopy, rect);
+                    this.deleteAnnotation(this.annotationRectBindings[i].annotation)
+                    this.drawOnscreenAnnotations()
+                }
+            }
+            console.log ('termina1 '+cont)
+        } else {
+            console.log(this.annotationRectBindings[0].rect)
+            for (let i=0; i<this.annotationRectBindings.length; i++) {
+                if (this.annotationRectBindings[i].annotation.type == 'Scene') {
+                    //console.log(this.annotations[i])
+                    //console.log (this.annotations[i].rect)
+                    this.view.deleteRect(this.annotationRectBindings[i].rect);
+                    cont = cont +1
+                }
+            }
+            console.log ('termina2 '+cont)
+        }
+        
+        //this.view.deleteAllRect()
+        //this.drawOnscreenAnnotations()
+        //var allRectDocument = document.getElementsByClassName('player-video')
+        //console.log (allRectDocument)
+        /*
+        var estado = console.log(document.getElementById('show-scene').checked)
+        console.log(estado)
+        console.log (estado)
+        document.getElementById('show-scene').checked = true
+        this.initAnnotations2()*/
+    }
 
     submitAnnotations(e) {
         e.preventDefault();
@@ -329,7 +418,7 @@ class Player {
         DataSources.annotations.save(this.videoId, this.annotations, this.metrics, window.mturk).then((response) => {
             // only show this if not running on turk
             if (!window.hitId)
-                this.showModal("Save", response);
+                this.showModal("Save", "Save Successful");
         });
     }
 
@@ -353,7 +442,7 @@ class Player {
         $('#accept-reject-btn').removeClass('btn-danger').addClass('btn-success')
         $('#accept-reject-btn').text('Accept');
         $('#acceptRejectForm').find('.modal-title').text("Accept Work");
-        $('#acceptRejectForm').modal('toggle');
+        $('#acceptRejectForm').modal('toggle'); 
     }
     showRejectDialog(e) {
         this.setDialogDefaults();
@@ -384,7 +473,7 @@ class Player {
 
     showEmailDialog(e) {
         this.setDialogDefaults();
-
+      
         $('#inputEmailMessage')[0].value = this.turkMetadata.emailMessage;
         $('#inputEmailSubject')[0].value = this.turkMetadata.emailSubject;
         $('#emailForm').modal('toggle');
@@ -409,11 +498,11 @@ class Player {
 
         var promise;
         if (type == 'accept')
-            promise = DataSources.annotations.acceptAnnotation(this.videoId, parseFloat(bonus.value), message.value,
+            promise = DataSources.annotations.acceptAnnotation(this.videoId, parseFloat(bonus.value), message.value, 
                                                                reopen.checked, deleteBoxes.checked, blockWorker.checked, this.annotations);
         else
             promise = DataSources.annotations.rejectAnnotation(this.videoId, message.value, reopen.checked, deleteBoxes.checked, blockWorker.checked, this.annotations);
-
+            
         promise.then((response) => {
             $('#acceptForm').modal('toggle');
             $('#acceptForm').find('.btn').removeAttr("disabled");
@@ -428,7 +517,7 @@ class Player {
         e.preventDefault();
         var subject = $('#inputEmailSubject')[0];
         var message = $('#inputEmailMessage')[0];
-
+        
         $('#emailForm').find('.btn').attr("disabled", "disabled");
         DataSources.annotations.emailWorker(this.videoId, subject.value, message.value).then((response) => {
             $('#emailForm').modal('toggle');

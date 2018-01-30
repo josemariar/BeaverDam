@@ -1,13 +1,6 @@
 "use strict";
 
 
-var ID = function () {
-  // Math.random should be unique because of its seeding algorithm.
-  // Convert it to base 36 (numbers + letters), and grab the first 9 characters
-  // after the decimal.
-  return '_' + Math.random().toString(36).substr(2, 9);
-};
-
 class Annotation {
     // Constants. ES6 doesn't support class constants yet, so we'll declare
     // them this way for now:
@@ -19,12 +12,13 @@ class Annotation {
         return 0.01 /* seconds */;
     }
 
-    constructor({fill, keyframes, type}) {
+
+    constructor({fill, id, keyframes, type, sceneName}) {
         // Fill of annotation
         this.fill = fill;
 
         // ID of annotation
-        this.id = ID();
+        this.id = id;
 
         // Keyframes of annotation
         this.keyframes = keyframes;
@@ -32,19 +26,53 @@ class Annotation {
         // Type of annotation
         this.type = type;
 
+        //Name of the scene
+        this.sceneName = sceneName;
+
         // Prevent adding new properties
         Misc.preventExtensions(this, Annotation);
     }
 
     // The hacky but only way to make a Annotation right now.
     static newFromCreationRect() {
-        var type = document.querySelector('#labels option:checked').value;
-        var fill = Misc.getRandomColor(type);
+        var ide = document.querySelectorAll('input[name = "object"]:checked');
+        var mType = []
+        for (var i= 0; i< ide.length; i++) {
+            mType.push (ide[i].value);
+        }
+
+        var fill = Misc.getRandomColor(mType);
         return new Annotation({
             keyframes: [],
             fill: fill,
-            type: type,
+            id: fill,
+            type: mType,
+            sceneName: "",
         });
+    }
+
+    static newFromCreationRect2() {
+        var type = 'Scene' //Podria coger el campo
+        var fill = Misc.getRandomColor(type);
+        var mSceneName = $('#scene-name').val()
+        //var mName = texfiel donde esta el nombre
+        return new Annotation({
+            keyframes: [],
+            fill: fill,
+            id: fill,
+            type: type,
+            sceneName: mSceneName,
+        });
+    }
+
+    static newAnnotationCustom(type2, keyframes2, fill2, id2, sceneName2) {
+        return new Annotation({
+            keyframes: keyframes2,
+            fill: fill2,
+            id: id2,
+            type: type2,
+            sceneName: sceneName2,
+        })
     }
 
 
@@ -63,9 +91,9 @@ class Annotation {
                 nextIndex: null,
                 closestIndex: null,
                 continueInterpolation: false,
-                state: null,
             };
         }
+
 
         var prevIndex = null;
         var nextIndex = null;
@@ -116,36 +144,16 @@ class Annotation {
             nextIndex: nextIndex,
             closestIndex: closestIndex,
             continueInterpolation: prevIndex != null ? this.keyframes[prevIndex].continueInterpolation : true,
-            state: prevIndex != null ? this.keyframes[prevIndex].state : "None",
         };
-    }
-
-    changeAnnotationLabel(newType) {
-        this.type = newType; 
-
-        // Trigger event
-        $(this).triggerHandler('change');
-    }
-
-    changeKeyframeState(frame, newState) {
-        frame.state = newState;
-
-        // Trigger event
-        $(this).triggerHandler('change');
     }
 
     /* Insert or update keyframe at time. */
     updateKeyframe(frame, usePreciseFrameMatching)  {
-        var {prevIndex, nextIndex, closestIndex, state} = this.getFrameAtTime(frame.time);
+        var {prevIndex, nextIndex, closestIndex} = this.getFrameAtTime(frame.time);
 
         if (frame.continueInterpolation === undefined)
             frame.continueInterpolation = true;
 
-        if (state)
-            frame.state = state;
-        else if (frame.state === undefined)
-            frame.state = document.querySelector('#states option:checked').value;
-            
         // Update the closestIndex-th frame
         if (closestIndex != null) {
             this.keyframes[closestIndex] = frame;
@@ -187,8 +195,7 @@ class Annotation {
             var newFrame = {
                                 time: justBeforeTime, 
                                 bounds: bounds,
-                                continueInterpolation: false,
-                                state: ""
+                                continueInterpolation: false
                             }
             this.updateKeyframe(newFrame, usePreciseFrameMatching);
         }

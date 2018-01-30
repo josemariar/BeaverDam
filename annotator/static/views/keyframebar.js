@@ -65,7 +65,7 @@ class Keyframebar {
         var frac = time / this.duration;
         var classBaseName = this.classBaseName.add('keyframe');
         var classNames = Misc.getClassNamesFromExts([classBaseName], classBaseName, classNameExtBooleans);
-
+        //console.log (classNames)
         $(this.KEYFRAME_SVG)
         .attr({class: classNames.join(' ')})
         .css({'left': `${frac * 100}%`})

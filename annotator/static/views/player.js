@@ -27,7 +27,6 @@ class PlayerView {
 
         // The keyframebar
         this.keyframebar = null;
-        this.annotationbar = null;
 
         // Timer id used to increate <video>.on('timeupdate') frequency
         this.manualTimeupdateTimerId = null;
@@ -63,7 +62,6 @@ class PlayerView {
 
         // Promises
         this.keyframebarReady = Misc.CustomPromise();
-        this.annotationbarReady = Misc.CustomPromise();
         this.paperReady = Misc.CustomPromise();
         this.videoReady = Misc.CustomPromise();
 
@@ -81,7 +79,6 @@ class PlayerView {
         this.initPaper();
         this.initVideo();
         this.initKeyframebar();
-        this.initAnnotationbar();
 
         if (helpEmbedded) {
             // check cookie
@@ -113,12 +110,6 @@ class PlayerView {
         this.keyframebar = new Keyframebar({classBaseName: this.classBaseName});
         this.keyframebar.attach(this.$('keyframebar'));
         this.keyframebarReady.resolve();
-    }
-
-    initAnnotationbar() {
-        this.annotationbar = new Annotationbar({classBaseName: this.classBaseName});
-        this.annotationbar.attach(this.$('annotationbar'));
-        this.annotationbarReady.resolve();
     }
 
     initPaper() {
@@ -230,10 +221,6 @@ class PlayerView {
             // keyframebar => video
             $(this.keyframebar).on('jump-to-time', (e, time) => this.jumpToTimeAndPause(time));
 
-            // edit annotation
-            $(this.annotationbar).on('control-edit-label', (e, data) => this.loadEditLabelModal(data));
-            $(this.annotationbar).on('control-edit-state', (e, data) => this.loadEditStateModal(data));
-                
             // controls => video
             this.$on('control-play-pause', 'click', (event) => {this.playPause()});
             this.$on('control-step-backward', 'click', (event) => {this.video.previousFrame()});
@@ -283,43 +270,14 @@ class PlayerView {
                 this.video.fit();
                 this.sizeVideoFrame();
             });
+            // Custom label listener
+            $('#annotation-type').on('change', () => {
+                $(this).triggerHandler('change-annotation-type');
+            });
+
             this.sizeVideoFrame();
             this.loading = false;
         });
-    }
-    
-    loadEditLabelModal(data) {
-        var annotation = data.annotation;
-        var type = annotation.type;
-        $('select[name=edit-label]').find('option[value="' + type + '"]').prop('selected', true);
-        $('#edit-label-modal').find('#change-label').data("annotation", annotation);
-    }
-
-    loadEditStateModal(data) {
-        var annotation = data.annotation;
-        var type = annotation.type;
-        var keyframe = data.keyframe;
-        var prevState = keyframe.state;
-
-        var url = "/get_states?label_name=" + escape(type);
-        var select = $('select[name=edit-state]');
-        
-        $.getJSON(url, function(d) {
-            select.find('option').remove();
-            
-            for (var i=0; i<d.length; i++) {
-                state = d[i]
-                var option = $('<option value="' + state['name'] +'" style="background-color: #' + state['color'] + '">' + state['name'] + '</option>');
-                if(state['name'] === prevState){
-                    option.prop('selected', true);
-                }
-                select.append(option);
-            }
-        });
-   
-        $('#edit-state-modal').find('#annotation-label').text(type);
-        $('#edit-state-modal').find('#change-state').data("annotation", annotation);
-        $('#edit-state-modal').find('#change-state').data("keyframe", keyframe);
     }
 
     // Time control
@@ -465,7 +423,16 @@ class PlayerView {
                 return true;
             }
         }
+        return true;
         throw new Error("PlayerView.deleteRect: rect not found", rect);
+    }
+
+    deleteAllRect() {
+        for (let i = 0; i < this.rects.length; i++) {
+            
+            this.rects[i].detach();
+            //this.rects.splice(i, 1);
+        }
     }
 
     togglePlayPauseIcon() {
