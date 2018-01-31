@@ -91,8 +91,6 @@ class Player {
         // On PlayerView...
 
         this.annotationRectBindings.push({annotation, rect});
-
-
         // On Rect...
 
         $(rect).on('discrete-change', (e, bounds) => {
@@ -276,13 +274,11 @@ class Player {
 
     drawOnscreenAnnotations() {
         for (let {annotation, rect} of this.annotationRectBindings) {
-            //console.logconsole.log (annotation.type)
             this.drawAnnotationOnRect(annotation, rect);
-            
         }
     }
 
-    //Dibuja en el cuadro de tiempo
+    //Draw in the time frame
     drawKeyframes() {
         this.view.keyframebar.resetWithDuration(this.view.video.duration);
         for (let annotation of this.annotations) {
@@ -307,12 +303,12 @@ class Player {
         // we want to hide if:
         //   - the very first frame object is in the future (nextIndex == 0 && closestIndex is null)
         //   - we're after the last frame and that last frame was marked as continueInterpolation false
-          
-        rect.appear({
-            real: closestIndex != null,
-            selected: this.selectedAnnotation === annotation,
-            singlekeyframe: continueInterpolation && !(nextIndex == 0 && closestIndex === null)
-        });
+
+		rect.appear({
+			real: closestIndex != null,
+			selected: this.selectedAnnotation === annotation,
+			singlekeyframe: continueInterpolation && !(nextIndex == 0 && closestIndex === null)
+		});
             
 
         // Don't mess up our drag
@@ -326,10 +322,7 @@ class Player {
     // Actions
     newFrame(e) {
 
-        //var annotation = new Annotation([], 1, 1, "casa");
         lastAnnotation = Annotation.newFromCreationRect2(this.isImageSequence)
-        //var annotation = Annotation.newFromCreationRect(this.isImageSequence);
-        //console.log(this.view.video)
         lastAnnotation.updateKeyframe({
             time: this.view.video.currentTime,
             bounds: Bounds.fromAttrs({
@@ -344,12 +337,8 @@ class Player {
         mRect.fill = lastAnnotation.fill
         this.initBindAnnotationAndRect(lastAnnotation, mRect);
         this.drawOnscreenAnnotations();
-        //this.initBindAnnotationAndRect(annotationCopy, rect);
-        //rect.fill = annotation.fill;
-        //this.initBindAnnotationAndRect(annotation, [0,0,50,50]);
         this.drawKeyframes()
 
-        console.log ('hola')
     }
 
     endScene (e) {
@@ -364,46 +353,26 @@ class Player {
 
     }
     changeVisibility (e) {
-        var cont = 0
-
         if (document.getElementById('show-scene').checked) {
-            for (var i=0; i<this.annotationRectBindings.length; i++) {
+            for (var i=this.annotationRectBindings.length-1; i>=0; i--) {
                 if (this.annotationRectBindings[i].annotation.type == 'Scene') {
-                    cont =  cont +1
                     var rect = this.view.addRect();
                     rect.fill = this.annotationRectBindings[i].annotation.fill
                     var annotationCopy = Annotation.newAnnotationCustom(this.annotationRectBindings[i].annotation.type, this.annotationRectBindings[i].annotation.keyframes, this.annotationRectBindings[i].annotation.fill, this.annotationRectBindings[i].annotation.id, this.annotationRectBindings[i].annotation.sceneName)
-                    //console.log(annotationCopy.keyframes)
+					this.deleteAnnotation(this.annotationRectBindings[i].annotation)
                     this.annotations.push(annotationCopy);
-                    this.initBindAnnotationAndRect(annotationCopy, rect);
-                    this.deleteAnnotation(this.annotationRectBindings[i].annotation)
+                    this.initBindAnnotationAndRect(annotationCopy, rect); 
                     this.drawOnscreenAnnotations()
-                }
+                } 
             }
-            console.log ('termina1 '+cont)
         } else {
-            console.log(this.annotationRectBindings[0].rect)
             for (let i=0; i<this.annotationRectBindings.length; i++) {
                 if (this.annotationRectBindings[i].annotation.type == 'Scene') {
-                    //console.log(this.annotations[i])
-                    //console.log (this.annotations[i].rect)
                     this.view.deleteRect(this.annotationRectBindings[i].rect);
-                    cont = cont +1
                 }
             }
-            console.log ('termina2 '+cont)
         }
         
-        //this.view.deleteAllRect()
-        //this.drawOnscreenAnnotations()
-        //var allRectDocument = document.getElementsByClassName('player-video')
-        //console.log (allRectDocument)
-        /*
-        var estado = console.log(document.getElementById('show-scene').checked)
-        console.log(estado)
-        console.log (estado)
-        document.getElementById('show-scene').checked = true
-        this.initAnnotations2()*/
     }
 
     submitAnnotations(e) {
