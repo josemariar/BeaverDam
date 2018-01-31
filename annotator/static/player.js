@@ -75,7 +75,8 @@ class Player {
         // When this.annotations is loaded AND view is ready for drawing...
         Promise.all([this.annotationsDataReady(), this.viewReady()]).then(() => {
             for (let annotation of this.annotations) {
-                let rect = this.view.addRect();
+				var isScene = (annotation.type == 'Scene')
+                let rect = this.view.addRect(isScene);
                 rect.fill = annotation.fill;
                 this.initBindAnnotationAndRect(annotation, rect);
             }
@@ -304,11 +305,20 @@ class Player {
         //   - the very first frame object is in the future (nextIndex == 0 && closestIndex is null)
         //   - we're after the last frame and that last frame was marked as continueInterpolation false
 
-		rect.appear({
+        if (annotation.type == 'Scene') {
+        	rect.appear({
+				real: closestIndex != null,
+				selected: false,
+				singlekeyframe: continueInterpolation && !(nextIndex == 0 && closestIndex === null)
+			});
+        } else {
+        	rect.appear({
 			real: closestIndex != null,
 			selected: this.selectedAnnotation === annotation,
 			singlekeyframe: continueInterpolation && !(nextIndex == 0 && closestIndex === null)
 		});
+        }
+		
             
 
         // Don't mess up our drag
@@ -333,7 +343,8 @@ class Player {
             })
         }, this.isImageSequence);
         this.annotations.push(lastAnnotation);
-        let mRect = this.view.addRect();
+		var isScene = (lastAnnotation.type == 'Scene')
+        let mRect = this.view.addRect(isScene);
         mRect.fill = lastAnnotation.fill
         this.initBindAnnotationAndRect(lastAnnotation, mRect);
         this.drawOnscreenAnnotations();
@@ -356,7 +367,7 @@ class Player {
         if (document.getElementById('show-scene').checked) {
             for (var i=this.annotationRectBindings.length-1; i>=0; i--) {
                 if (this.annotationRectBindings[i].annotation.type == 'Scene') {
-                    var rect = this.view.addRect();
+                    var rect = this.view.addRect(true);
                     rect.fill = this.annotationRectBindings[i].annotation.fill
                     var annotationCopy = Annotation.newAnnotationCustom(this.annotationRectBindings[i].annotation.type, this.annotationRectBindings[i].annotation.keyframes, this.annotationRectBindings[i].annotation.fill, this.annotationRectBindings[i].annotation.id, this.annotationRectBindings[i].annotation.sceneName)
 					this.deleteAnnotation(this.annotationRectBindings[i].annotation)

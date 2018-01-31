@@ -384,9 +384,10 @@ class PlayerView {
         };
     }
 
-    makeAndAttachRect(KindOfRect) {
+    makeAndAttachRect(KindOfRect, isScene) {
         var {classBaseName} = this;
-        var rect = new KindOfRect({classBaseName});
+		var fill = null;
+        var rect = new KindOfRect({classBaseName, fill, isScene});
         rect.attach(this.$paper, this.metrics.bind(this));
 
         // In case drag exceeds bounds of object, set it as the cursor of the
@@ -407,8 +408,8 @@ class PlayerView {
     }
 
 
-    addRect() {
-        var rect = this.makeAndAttachRect(Rect);
+    addRect(isScene) {
+        var rect = this.makeAndAttachRect(Rect, isScene);
         this.rects.push(rect);
         return rect;
     }

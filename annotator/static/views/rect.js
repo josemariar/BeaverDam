@@ -31,7 +31,7 @@ var RectConstants = {
 
 
 class Rect {
-    constructor({classBaseName, fill}) {
+    constructor({classBaseName, fill, isScene}) {
         // Before annotations are attached, we cache appearance in these "pre-
         // attached" properties
 
@@ -67,6 +67,8 @@ class Rect {
 
         // Fill color
         this.fill = fill;
+
+		this.isScene = isScene;
 
         // Raphel rect element
         this.$el = null;
@@ -190,12 +192,23 @@ class Rect {
         return this._fill;
     }
 
+	get isScene() {
+		return this._isScene;
+	}
+
     set fill(fill) {
         this._fill = fill;
         this.attr({
             'fill': this._fill,
         });
     }
+
+	set isScene(isScene) {
+		this._isScene = isScene;
+        this.attr({
+            'isScene': this._isScene,
+        });
+	}
 
     get visibility() {
         return this._visibility;
@@ -321,12 +334,17 @@ class Rect {
 
     setHandlers() {
         // Handlers
-        this.$el.mousedown(this.onMousedown.bind(this));
-        this.$el.drag(this.onDragMove.bind(this), this.onDragStart.bind(this), this.onDragEnd.bind(this));
-        this.$el.mousemove(this.onMouseover.bind(this));
-        this.$el.dblclick(this.onDoubleclick.bind(this));
+		if (this.isScene) {
+			this.$el.mousedown(this.onMousedown.bind(this));
+		}
+		else {
+			this.$el.mousedown(this.onMousedown.bind(this));
+    	    this.$el.drag(this.onDragMove.bind(this), this.onDragStart.bind(this), this.onDragEnd.bind(this));
+    	    this.$el.mousemove(this.onMouseover.bind(this));
+	        this.$el.dblclick(this.onDoubleclick.bind(this));
+		}
+      
     }
-
 
     // Event handler: Click
 
@@ -477,16 +495,21 @@ void Rect;
 class CreationRect extends Rect {
     constructor() {
         super(...arguments);
-
         // Prevent adding new properties
         Misc.preventExtensions(this, CreationRect);
     }
 
     setHandlers() {
-        this.$el.mousedown(this.onMousedown.bind(this));
-        this.$el.drag(this.onDragMove.bind(this), this.onDragStart.bind(this), this.onDragEnd.bind(this));
-        this.$el.mousemove(this.onMouseover.bind(this));
+		if (this.isScene) {
+	        this.$el.mousedown(this.onMousedown.bind(this));
+		} else {
+			this.$el.mousedown(this.onMousedown.bind(this));
+        	this.$el.drag(this.onDragMove.bind(this), this.onDragStart.bind(this), this.onDragEnd.bind(this));
+        	this.$el.mousemove(this.onMouseover.bind(this));
+		}
     }
+
+
 
 
     // Setting appearance
