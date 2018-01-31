@@ -1,6 +1,8 @@
 "use strict";
 
 var lastAnnotation;
+    var cont = 0;
+var currentScene= null;
 
 class Player {
     constructor({$container, videoSrc, videoId, videoStart, videoEnd, isImageSequence, turkMetadata}) {
@@ -191,6 +193,7 @@ class Player {
             });
 
             this.view.video.onTimeUpdate(() => {
+
                 $(this).triggerHandler('change-onscreen-annotations');
             });
 
@@ -288,7 +291,6 @@ class Player {
             }
         }
     }
-
     drawAnnotationOnRect(annotation, rect) {
         if (this.metrics.annotationsStartTime == null) {
             this.metrics.annotationsStartTime = Date.now();
@@ -303,6 +305,8 @@ class Player {
         // we want to hide if:
         //   - the very first frame object is in the future (nextIndex == 0 && closestIndex is null)
         //   - we're after the last frame and that last frame was marked as continueInterpolation false
+		cont = cont +1
+        console.log (cont)
 
         if (annotation.type == 'Scene') {
         	rect.appear({
@@ -310,6 +314,19 @@ class Player {
 				selected: false,
 				singlekeyframe: continueInterpolation && !(nextIndex == 0 && closestIndex === null)
 			});
+			var aparece = (closestIndex != null) || (continueInterpolation && !(nextIndex == 0 && closestIndex === null))
+			console.log (currentScene)
+        	if (aparece && (currentScene == null)) {
+        		console.log ('entra en 1')
+        		currentScene = annotation;
+        		$('#scene-name').val(currentScene.sceneName)
+        	} else if (!aparece && (currentScene == annotation)) {
+        		console.log ('entra en 2')
+        		$('#scene-name').val('')
+        		currentScene = null
+        	} 
+        	
+        	
         } else {
         	rect.appear({
 			real: closestIndex != null,
@@ -348,22 +365,30 @@ class Player {
         this.initBindAnnotationAndRect(lastAnnotation, mRect);
         this.drawOnscreenAnnotations();
         this.drawKeyframes()
+        $('#add-btn').prop("disabled",true);
+	    $('#delete-btn').prop("disabled", false);
 
     }
 
     endScene (e) {
-
-        //this.view.video.currentTime, this.isImageSequence
-        lastAnnotation.deleteKeyframeAtTime(this.view.video.currentTime, this.isImageSequence);
-        this.drawOnscreenAnnotations();
-        this.drawKeyframes();
-        //Aqui en lugar de crear una nueva anotacion, deberia coger de alguna forma esa antoacion
-        //y terminar la interpolacion en el frame deseado.
-        //Deberia poderse buscar una anotacion en concreo.
+    	if (lastAnnotation != null) {
+	        //this.view.video.currentTime, this.isImageSequence
+	        lastAnnotation.deleteKeyframeAtTime(this.view.video.currentTime, this.isImageSequence);
+	        this.drawOnscreenAnnotations();
+	        this.drawKeyframes();
+	        $('#add-btn').prop("disabled",false);
+	        $('#delete-btn').prop("disabled", true);
+	        $('#scene-name').val ('')
+	        currentScene = null
+	        //Aqui en lugar de crear una nueva anotacion, deberia coger de alguna forma esa antoacion
+	        //y terminar la interpolacion en el frame deseado.
+	        //Deberia poderse buscar una anotacion en concreo.
+	    }
 
     }
     changeVisibility (e) {
         if (document.getElementById('show-scene').checked) {
+        	currentScene = null
             for (var i=this.annotationRectBindings.length-1; i>=0; i--) {
                 if (this.annotationRectBindings[i].annotation.type == 'Scene') {
                     var rect = this.view.addRect(true);
@@ -381,6 +406,7 @@ class Player {
                     this.view.deleteRect(this.annotationRectBindings[i].rect);
                 }
             }
+            currentScene = null
         }
         
     }
@@ -548,6 +574,9 @@ class Player {
 			if (this.annotations[i] === selected) {
 				if (selected.type == 'Scene') {
 					this.deleteAnnotation(selected)
+					currentScene = null
+					$('#annotation-type').val('')
+					$('#scene-name').val ('')
 					return true;				
 				}
 			}
