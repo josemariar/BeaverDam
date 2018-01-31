@@ -142,7 +142,6 @@ class Player {
         });
 
         $(this).on('change-keyframes', () => {
-            
             this.drawKeyframes();
             if (this.selectedAnnotation) {
                 $('#annotation-type').val(this.selectedAnnotation.type);
@@ -543,6 +542,17 @@ class Player {
         if (this.selectedAnnotation == null) return false;
         var selected = this.selectedAnnotation;
         this.selectedAnnotation = null;
+		//Get the current annotation. If the current annotation is a scene, 
+		//it will be  completely removed.
+		for (let i = 0; i< this.annotations.length; i++) {
+			if (this.annotations[i] === selected) {
+				if (selected.type == 'Scene') {
+					this.deleteAnnotation(selected)
+					return true;				
+				}
+			}
+		}
+		
         selected.deleteKeyframeAtTime(this.view.video.currentTime, this.isImageSequence);
 
         if (selected.keyframes.length === 0) {

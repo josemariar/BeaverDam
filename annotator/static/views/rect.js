@@ -140,7 +140,7 @@ class Rect {
     }
 
     appear({real, selected, singlekeyframe}) {
-
+		
         this.setClassNameExts({real, selected, singlekeyframe});
 
         if (selected === true) {
