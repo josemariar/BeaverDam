@@ -40,7 +40,7 @@ We require a tight rectangle covering all of the person visible in that video fr
 
 ### How to add an annotation.
 
-The anotations are the way to label the objects in the video. An annotation consists of a rectangle and labels.
+The annotations are the way to label the objects in the video. An annotation consists of a rectangle and labels.
 An annotation can have multiple labels. The labels are selected through a checkbox.
 
 ![](https://github.com/josemariar/BeaverDam/blob/master/images/customlabels.png?raw=true)
