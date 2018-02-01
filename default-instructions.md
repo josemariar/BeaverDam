@@ -9,7 +9,7 @@ Your task is to accurately draw rectangles around different objects in each vide
 4. Go back to the first frame and repeat for the next object
 5. At the end, use the scene annotator to label the scenes.
 
-##Example: Labeling people
+## Example: Labeling people
 
 ### Detailed Instructions
 1. We need you to draw an accurate box around each person you see in the video
@@ -36,9 +36,9 @@ We require a tight rectangle covering all of the person visible in that video fr
 - `space` play/pause
 - `d` or 'delete' to delete selected rectangle
 
-#Annotations
+# Annotations
 
-###How to add an annotation.
+### How to add an annotation.
 
 The anotations are the way to label the objects in the video. An annotation consists of a rectangle and labels.
 An annotation can have multiple labels. The labels are selected through a checkbox.
@@ -47,14 +47,14 @@ An annotation can have multiple labels. The labels are selected through a checkb
 
 Before drawing the rectangle, the user must check the correct labels. Otherwise, the annotation will have incorrect labels. The labels of an annotation can not be changed.
 
-###How to add new labels
+### How to add new labels
 
 1. Go to /admin/ page
 2. In the ANNOTATOR table, click on Add label
 3. Write one name and select one color.
 4. Save it
 
-##Scene annotations
+## Scene annotations
 
 ### How to add a scene annotation
 1. Write the scene annotation name in the 'Scene Name' textbox
