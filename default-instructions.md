@@ -33,9 +33,9 @@ For example:
 4. If you don't see any people in the video for that frame then don't draw any rectangles
 5. If the person disappears then delete the rectangle that represented that person (press 'd', or 'delete' with the box selected)
 
-#Annotations
+# Annotations
 
-###How to add an annotation.
+### How to add an annotation.
 
 An annotation can have multiple labels. The labels are selected through a checkbox.
 
@@ -43,14 +43,14 @@ An annotation can have multiple labels. The labels are selected through a checkb
 
 Before drawing the rectangle, the user must check the correct labels. Otherwise, the annotation will be labelled incorrectly. The labels defined on an annotation can not be changed.
 
-###How to add new labels
+### How to add new labels
 
 1. Go to /admin/ page.
 2. In the ANNOTATOR table, click on Add label.
 3. Write the desired name and select a color.
 4. Push save button.
 
-##Scene annotations
+## Scene annotations
 
 ### How to add a scene annotation
 1. Write the scene annotation name in the 'Scene Name' textbox.
